@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Batch {
+  id            String   @id @default(cuid())
+  name          String?
+  sourceZipName String
+  zipPath       String
+  status        String   @default("UPLOADED")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  images BatchImage[]
+  items  Item[]
+}
+
+model Item {
+  id       String  @id @default(cuid())
+  batchId  String
+  sku      String?
+  weightOz Float?
+  status   String  @default("PENDING")
+
+  batch Batch @relation(fields: [batchId], references: [id])
+
+  images BatchImage[] @relation("ItemImages")
+}
+
+model BatchImage {
+  id        String    @id @default(cuid())
+  batchId   String
+  itemId    String?
+  imagePath String
+  fileName  String
+  exifDate  DateTime?
+  sortIndex Int?
+
+  batch Batch @relation(fields: [batchId], references: [id])
+  item  Item? @relation("ItemImages", fields: [itemId], references: [id])
+
+  @@index([batchId, sortIndex])
+  @@index([itemId])
+}
